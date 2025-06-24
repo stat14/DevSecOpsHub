@@ -5,6 +5,9 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from flask_jwt_extended import JWTManager
+from flask_socketio import SocketIO
+from flask_mail import Mail
+import redis
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -24,8 +27,30 @@ app.config['JWT_SECRET_KEY'] = os.environ.get("JWT_SECRET_KEY", "nexus-jwt-secre
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 jwt = JWTManager(app)
 
-# Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///nexus.db")
+# WebSocket Configuration
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
+
+# Mail Configuration
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', '587'))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@nexus.local')
+mail = Mail(app)
+
+# Redis Configuration for notifications
+try:
+    redis_client = redis.Redis(host='localhost', port=6379, db=0, decode_responses=True)
+    redis_client.ping()
+except:
+    redis_client = None
+
+# Configure the database - Use PostgreSQL in production
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url or "sqlite:///nexus.db"
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
@@ -43,6 +68,9 @@ from flow import flow_bp
 from client import client_bp
 from reports import reports_bp
 from activity import activity_bp
+from analytics import analytics_bp
+from enhanced_reports import enhanced_reports_bp
+import notifications
 
 # Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -52,6 +80,12 @@ app.register_blueprint(flow_bp, url_prefix='/flow')
 app.register_blueprint(client_bp, url_prefix='/client')
 app.register_blueprint(reports_bp, url_prefix='/reports')
 app.register_blueprint(activity_bp, url_prefix='/activity')
+app.register_blueprint(analytics_bp, url_prefix='/analytics')
+app.register_blueprint(enhanced_reports_bp, url_prefix='/enhanced-reports')
+
+# Register UI enhancements
+from ui_enhancements import ui_bp
+app.register_blueprint(ui_bp, url_prefix='/ui')
 
 @app.route('/')
 def index():
@@ -107,3 +141,6 @@ with app.app_context():
         db.session.add(default_admin)
         db.session.commit()
         logging.info("Default super admin created: admin@nexus.local / admin123")
+
+# Make socketio available for main.py
+__all__ = ['app', 'socketio']

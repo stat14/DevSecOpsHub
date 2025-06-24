@@ -12,13 +12,16 @@ The platform supports role-based access control with different user types (super
 
 ## System Architecture
 
-**Backend Framework**: Flask with SQLAlchemy ORM
-**Database**: SQLite (development) with PostgreSQL support configured
-**Frontend**: Server-side rendered templates using Jinja2 with Bootstrap 5
-**Authentication**: Session-based authentication with JWT support configured
+**Backend Framework**: Flask with SQLAlchemy ORM and SocketIO for real-time features
+**Database**: PostgreSQL (production) with SQLite fallback for development
+**Frontend**: Server-side rendered templates using Jinja2 with Bootstrap 5 and enhanced UI
+**Authentication**: Session-based authentication with JWT support and advanced RBAC
+**Real-time**: WebSocket support for notifications and live updates
+**Analytics**: Advanced reporting with Plotly charts and interactive dashboards
+**Email System**: Flask-Mail integration for automated notifications
 **Deployment**: Gunicorn WSGI server with autoscale deployment target
 
-The application follows a modular blueprint architecture with separate modules for each major feature area.
+The application follows a modular blueprint architecture with separate modules for each major feature area, enhanced with enterprise-grade security and monitoring.
 
 ## Key Components
 
@@ -42,6 +45,11 @@ The application follows a modular blueprint architecture with separate modules f
 - **Flow Module** (`flow.py`): Agile development with Kanban boards
 - **Client Portal** (`client.py`): Read-only access for clients to view project status
 - **Reports** (`reports.py`): PDF report generation using ReportLab
+- **Enhanced Reports** (`enhanced_reports.py`): Advanced report templates with analytics
+- **Analytics** (`analytics.py`): Comprehensive metrics and interactive dashboards
+- **Notifications** (`notifications.py`): Real-time notification system with email support
+- **RBAC** (`rbac.py`): Advanced role-based access control with granular permissions
+- **UI Enhancements** (`ui_enhancements.py`): Modern UI components and animations
 
 ### Frontend Architecture
 - Bootstrap 5 responsive design
@@ -86,8 +94,19 @@ The application is configured for deployment on Replit with:
 
 The `.replit` configuration supports both development workflows and production deployment with appropriate server binding and port configuration.
 
+## Recent Changes
+- June 24, 2025: Migration to Replit completed with enterprise-grade enhancements
+- PostgreSQL database integration for production deployment
+- Real-time notifications system with WebSocket support
+- Advanced analytics dashboard with interactive charts
+- Enhanced RBAC system with granular permissions
+- Professional report generation with advanced templates
+- UI/UX improvements with animations and modern design
+- Email notification system for project updates
+- Comprehensive local hosting documentation
+
 ## Changelog
-- June 24, 2025. Initial setup
+- June 24, 2025: Initial setup and enterprise migration completed
 
 ## User Preferences
 

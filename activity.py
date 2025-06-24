@@ -73,7 +73,7 @@ def activity_stats():
         db.func.count(ActivityLog.id).label('count')
     ).filter(
         ActivityLog.created_at >= start_date
-    ).group_by(ActivityLog.action).order_by('count desc').limit(10).all()
+    ).group_by(ActivityLog.action).order_by(db.func.count(ActivityLog.id).desc()).limit(10).all()
     
     # Most active users
     user_stats = db.session.query(
@@ -83,7 +83,7 @@ def activity_stats():
         db.func.count(ActivityLog.id).label('count')
     ).join(ActivityLog).filter(
         ActivityLog.created_at >= start_date
-    ).group_by(User.id).order_by('count desc').limit(10).all()
+    ).group_by(User.id).order_by(db.func.count(ActivityLog.id).desc()).limit(10).all()
     
     return jsonify({
         'daily_stats': [{'date': str(stat.date), 'count': stat.count} for stat in daily_stats],
