@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Client Portal - Nexus Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-eye me-3 text-primary"></i>
+                Client Portal
+            </h1>
+            <p class="text-muted">Monitor your project progress and access reports</p>
+        </div>
+    </div>
+
+    <!-- Welcome Message -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="avatar-lg">
+                                <div class="avatar-initial rounded-circle bg-primary text-white">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Welcome, {{ session.user_name }}!</h5>
+                            <p class="text-muted mb-0">You have access to {{ (pentest_projects|length + dev_projects|length) }} project{{ 's' if (pentest_projects|length + dev_projects|length) != 1 else '' }} assigned to you.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Penetration Testing Projects -->
+    {% if pentest_projects %}
+        <div class="row mb-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header bg-danger text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            Security Assessment Projects
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for project in pentest_projects %}
+                                <div class="col-lg-6 col-md-12 mb-4">
+                                    <div class="card h-100 project-card shadow-hover">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{ project.name }}</h6>
+                                                {% if project.client_name %}
+                                                    <small class="text-muted">{{ project.client_name }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <span class="badge bg-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}primary{% else %}secondary{% endif %}">
+                                                {{ project.status.title() }}
+                                            </span>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if project.description %}
+                                                <p class="text-muted mb-3">{{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}</p>
+                                            {% endif %}
+
+                                            <!-- Finding Statistics -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-3">
+                                                    <div class="fw-bold text-danger">{{ project.findings|selectattr('severity', 'equalto', 'critical')|list|length }}</div>
+                                                    <small class="text-muted">Critical</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="fw-bold text-warning">{{ project.findings|selectattr('severity', 'equalto', 'high')|list|length }}</div>
+                                                    <small class="text-muted">High</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="fw-bold text-success">{{ project.findings|selectattr('status', 'equalto', 'closed')|list|length }}</div>
+                                                    <small class="text-muted">Resolved</small>
+                                                </div>
+                                                <div class="col-3">
+                                                    <div class="fw-bold text-info">{{ project.findings|length }}</div>
+                                                    <small class="text-muted">Total</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-grid gap-2">
+                                                <a href="{{ url_for('client.project_detail', project_id=project.id) }}" 
+                                                   class="btn btn-outline-danger">
+                                                    <i class="fas fa-eye me-2"></i>
+                                                    View Security Findings
+                                                </a>
+                                                {% if project.findings %}
+                                                    <a href="{{ url_for('reports.generate_pentest_report', project_id=project.id) }}" 
+                                                       class="btn btn-outline-success btn-sm" target="_blank">
+                                                        <i class="fas fa-download me-1"></i>
+                                                        Download Security Report
+                                                    </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-muted small">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Started: {{ project.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                                {% if project.findings %}
+                                                    <span>
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Last Update: {{ project.findings|max(attribute='updated_at')|attr('updated_at')|strftime('%b %d, %Y') }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Development Projects -->
+    {% if dev_projects %}
+        <div class="row mb-5">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-code me-2"></i>
+                            Development Projects
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for project in dev_projects %}
+                                <div class="col-lg-6 col-md-12 mb-4">
+                                    <div class="card h-100 project-card shadow-hover">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{ project.name }}</h6>
+                                            </div>
+                                            <span class="badge bg-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}primary{% else %}secondary{% endif %}">
+                                                {{ project.status.title() }}
+                                            </span>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if project.description %}
+                                                <p class="text-muted mb-3">{{ project.description[:150] }}{% if project.description|length > 150 %}...{% endif %}</p>
+                                            {% endif %}
+
+                                            <!-- Task Statistics -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-secondary">{{ project.tasks|selectattr('status', 'equalto', 'todo')|list|length }}</div>
+                                                    <small class="text-muted">To Do</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-warning">{{ project.tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</div>
+                                                    <small class="text-muted">In Progress</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-success">{{ project.tasks|selectattr('status', 'equalto', 'done')|list|length }}</div>
+                                                    <small class="text-muted">Done</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Progress Bar -->
+                                            {% set total_tasks = project.tasks|length %}
+                                            {% set completed_tasks = project.tasks|selectattr('status', 'equalto', 'done')|list|length %}
+                                            {% set progress_percent = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0 %}
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="text-muted">Progress</small>
+                                                    <small class="text-muted">{{ completed_tasks }}/{{ total_tasks }} tasks</small>
+                                                </div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ progress_percent }}%" 
+                                                         aria-valuenow="{{ progress_percent }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-grid">
+                                                <a href="{{ url_for('client.project_detail', project_id=project.id) }}" 
+                                                   class="btn btn-outline-success">
+                                                    <i class="fas fa-eye me-2"></i>
+                                                    View Project Progress
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-muted small">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    Started: {{ project.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                                {% if project.tasks %}
+                                                    <span>
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Last Update: {{ project.tasks|max(attribute='updated_at')|attr('updated_at')|strftime('%b %d, %Y') }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- No Projects Message -->
+    {% if not pentest_projects and not dev_projects %}
+        <div class="row">
+            <div class="col">
+                <div class="text-center py-5">
+                    <i class="fas fa-inbox fa-4x text-muted mb-4"></i>
+                    <h4 class="text-muted mb-3">No Projects Assigned</h4>
+                    <p class="text-muted mb-4">You don't have access to any projects at the moment. Please contact your administrator to get assigned to projects.</p>
+                    <div class="alert alert-info d-inline-block">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Need Access?</strong> Reach out to your project manager or system administrator.
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Help Section -->
+    <div class="row mt-5">
+        <div class="col">
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-2">
+                                <i class="fas fa-question-circle me-2"></i>
+                                Need Help?
+                            </h6>
+                            <p class="text-muted mb-0">
+                                If you have questions about your projects or need assistance accessing reports, 
+                                please contact your project team or administrator.
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn btn-outline-primary" onclick="showSupportInfo()">
+                                <i class="fas fa-envelope me-2"></i>
+                                Contact Support
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to project cards
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-3px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+
+function showSupportInfo() {
+    NexusApp.showToast('Support contact information: admin@nexus.local', 'info');
+}
+</script>
+{% endblock %}

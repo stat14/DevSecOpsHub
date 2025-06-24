@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus Flow - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-project-diagram me-3 text-success"></i>
+                Nexus Flow Dashboard
+            </h1>
+            <p class="text-muted">Agile Project Management for Development Teams</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="fas fa-plus me-2"></i>
+                New Dev Project
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-primary">{{ stats.total_projects }}</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-success">{{ stats.active_projects }}</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-warning">{{ stats.total_tasks }}</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-info">{{ stats.completed_tasks }}</div>
+                <div class="stat-label">Completed Tasks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-code me-2"></i>
+                        Development Projects
+                    </h5>
+                    <span class="badge bg-success">{{ projects|length }} project{{ 's' if projects|length != 1 else '' }}</span>
+                </div>
+                <div class="card-body">
+                    {% if projects %}
+                        <div class="row">
+                            {% for project in projects %}
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="card h-100 project-card shadow-hover" data-project-id="{{ project.id }}">
+                                        <div class="card-header bg-success text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-code me-2"></i>
+                                                    {{ project.name }}
+                                                </h6>
+                                                <span class="badge bg-light text-dark">
+                                                    {{ project.status.title() }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if project.description %}
+                                                <p class="text-muted mb-3">
+                                                    {{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}
+                                                </p>
+                                            {% endif %}
+
+                                            <!-- Task Statistics -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-secondary">{{ project.tasks|selectattr('status', 'equalto', 'todo')|list|length }}</div>
+                                                    <small class="text-muted">To Do</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-warning">{{ project.tasks|selectattr('status', 'equalto', 'in_progress')|list|length }}</div>
+                                                    <small class="text-muted">In Progress</small>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="fw-bold text-success">{{ project.tasks|selectattr('status', 'equalto', 'done')|list|length }}</div>
+                                                    <small class="text-muted">Done</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Progress Bar -->
+                                            {% set total_tasks = project.tasks|length %}
+                                            {% set completed_tasks = project.tasks|selectattr('status', 'equalto', 'done')|list|length %}
+                                            {% set progress_percent = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0 %}
+                                            
+                                            <div class="mb-3">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="text-muted">Progress</small>
+                                                    <small class="text-muted">{{ completed_tasks }}/{{ total_tasks }} tasks</small>
+                                                </div>
+                                                <div class="progress">
+                                                    <div class="progress-bar bg-success" role="progressbar" 
+                                                         style="width: {{ progress_percent }}%" 
+                                                         aria-valuenow="{{ progress_percent }}" 
+                                                         aria-valuemin="0" aria-valuemax="100">
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-grid">
+                                                <a href="{{ url_for('flow.board', project_id=project.id) }}" 
+                                                   class="btn btn-success">
+                                                    <i class="fas fa-columns me-2"></i>
+                                                    Open Kanban Board
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-muted small">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ project.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ project.creator.full_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Development Projects</h5>
+                            <p class="text-muted">Create your first project to start managing development tasks.</p>
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                <i class="fas fa-plus me-2"></i>
+                                Create First Project
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-code me-2"></i>
+                    Create Development Project
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('flow.create_project') }}" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">
+                            <i class="fas fa-tag me-2"></i>Project Name
+                        </label>
+                        <input type="text" class="form-control" id="projectName" name="name" 
+                               required placeholder="Enter project name">
+                        <div class="invalid-feedback">
+                            Please provide a project name.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>Project Description
+                        </label>
+                        <textarea class="form-control" id="projectDescription" name="description" 
+                                  rows="4" placeholder="Describe the project goals, features, and requirements..."></textarea>
+                        <small class="form-text text-muted">Provide details about the project scope, objectives, and deliverables</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to project cards
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

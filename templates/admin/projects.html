@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Project Management - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-project-diagram me-3"></i>
+                Project Management
+            </h1>
+            <p class="text-muted">Manage platform projects and assignments</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="fas fa-plus me-2"></i>
+                Create Project
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="type" class="form-label">Project Type</label>
+                            <select class="form-select" id="type" name="type">
+                                <option value="">All Types</option>
+                                <option value="pentest" {% if project_type == 'pentest' %}selected{% endif %}>Penetration Testing</option>
+                                <option value="development" {% if project_type == 'development' %}selected{% endif %}>Development</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="status" class="form-label">Status</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="">All Statuses</option>
+                                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                                <option value="completed" {% if status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="archived" {% if status == 'archived' %}selected{% endif %}>Archived</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-2"></i>Filter
+                            </button>
+                            <a href="{{ url_for('admin.projects') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Projects ({{ projects.total }} total)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if projects.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Project</th>
+                                        <th>Type</th>
+                                        <th>Status</th>
+                                        <th>Created By</th>
+                                        <th>Created</th>
+                                        <th>Team</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for project in projects.items %}
+                                        <tr>
+                                            <td>
+                                                <div>
+                                                    <div class="fw-medium">{{ project.name }}</div>
+                                                    {% if project.client_name %}
+                                                        <div class="text-muted small">Client: {{ project.client_name }}</div>
+                                                    {% endif %}
+                                                    {% if project.description %}
+                                                        <div class="text-muted small">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if project.project_type == 'pentest' %}danger{% else %}primary{% endif %}">
+                                                    <i class="fas fa-{% if project.project_type == 'pentest' %}shield-alt{% else %}code{% endif %} me-1"></i>
+                                                    {{ project.project_type.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}primary{% else %}secondary{% endif %}">
+                                                    {{ project.status.title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm me-2">
+                                                        <div class="avatar-initial rounded-circle bg-secondary text-white">
+                                                            {{ project.creator.first_name[0] }}{{ project.creator.last_name[0] }}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ project.creator.full_name }}</div>
+                                                        <div class="text-muted small">{{ project.creator.role.replace('_', ' ').title() }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span data-bs-toggle="tooltip" title="{{ project.created_at.strftime('%B %d, %Y at %I:%M %p') }}">
+                                                    {{ project.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-light text-dark me-2">
+                                                        {{ project.assigned_users|length }} member{{ 's' if project.assigned_users|length != 1 else '' }}
+                                                    </span>
+                                                    <button class="btn btn-sm btn-outline-secondary" 
+                                                            data-bs-toggle="modal" data-bs-target="#assignUsersModal"
+                                                            onclick="showAssignUsers({{ project.id }}, '{{ project.name }}')">
+                                                        <i class="fas fa-users"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{% if project.project_type == 'pentest' %}{{ url_for('secure.project_detail', project_id=project.id) }}{% else %}{{ url_for('flow.board', project_id=project.id) }}{% endif %}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if project.project_type == 'pentest' %}
+                                                        <a href="{{ url_for('reports.preview_pentest_report', project_id=project.id) }}" 
+                                                           class="btn btn-sm btn-outline-info" target="_blank">
+                                                            <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if projects.pages > 1 %}
+                            <div class="card-footer">
+                                <nav aria-label="Project pagination">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        <li class="page-item {% if not projects.has_prev %}disabled{% endif %}">
+                                            <a class="page-link" href="{{ url_for('admin.projects', page=projects.prev_num, type=project_type, status=status) if projects.has_prev }}">
+                                                Previous
+                                            </a>
+                                        </li>
+                                        
+                                        {% for page_num in projects.iter_pages() %}
+                                            {% if page_num %}
+                                                {% if page_num != projects.page %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="{{ url_for('admin.projects', page=page_num, type=project_type, status=status) }}">
+                                                            {{ page_num }}
+                                                        </a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ page_num }}</span>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        <li class="page-item {% if not projects.has_next %}disabled{% endif %}">
+                                            <a class="page-link" href="{{ url_for('admin.projects', page=projects.next_num, type=project_type, status=status) if projects.has_next }}">
+                                                Next
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No projects found</h5>
+                            <p class="text-muted">No projects match your current filters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.create_project') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="createProjectName" class="form-label">Project Name</label>
+                        <input type="text" class="form-control" id="createProjectName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createProjectType" class="form-label">Project Type</label>
+                        <select class="form-select" id="createProjectType" name="project_type" required>
+                            <option value="pentest">Penetration Testing</option>
+                            <option value="development">Development</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="createClientName" class="form-label">Client Name (Optional)</label>
+                        <input type="text" class="form-control" id="createClientName" name="client_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="createProjectDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="createProjectDescription" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Users Modal -->
+<div class="modal fade" id="assignUsersModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Assign Users to Project</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="assignUsersForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Select Users</label>
+                        <div id="userCheckboxes">
+                            <!-- User checkboxes will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update Assignments</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAssignUsers(projectId, projectName) {
+    document.getElementById('assignUsersForm').action = `/admin/projects/${projectId}/assign`;
+    document.querySelector('#assignUsersModal .modal-title').textContent = `Assign Users to ${projectName}`;
+    
+    // TODO: Populate user checkboxes via AJAX
+    // For now, this would need to be implemented with proper user data
+}
+</script>
+{% endblock %}

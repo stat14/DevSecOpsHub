@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Nexus Secure - Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-shield-alt me-3 text-danger"></i>
+                Nexus Secure Dashboard
+            </h1>
+            <p class="text-muted">Penetration Testing as a Service Platform</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                <i class="fas fa-plus me-2"></i>
+                New Pentest Project
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-primary">{{ stats.total_projects }}</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-success">{{ stats.active_projects }}</div>
+                <div class="stat-label">Active Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-warning">{{ stats.total_findings }}</div>
+                <div class="stat-label">Total Findings</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-danger">{{ stats.critical_findings }}</div>
+                <div class="stat-label">Critical Findings</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-project-diagram me-2"></i>
+                        Penetration Testing Projects
+                    </h5>
+                    <span class="badge bg-primary">{{ projects|length }} project{{ 's' if projects|length != 1 else '' }}</span>
+                </div>
+                <div class="card-body">
+                    {% if projects %}
+                        <div class="row">
+                            {% for project in projects %}
+                                <div class="col-lg-4 col-md-6 mb-4">
+                                    <div class="card h-100 project-card shadow-hover" data-project-id="{{ project.id }}">
+                                        <div class="card-header bg-danger text-white">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">
+                                                    <i class="fas fa-shield-alt me-2"></i>
+                                                    {{ project.name }}
+                                                </h6>
+                                                <span class="badge bg-light text-dark">
+                                                    {{ project.status.title() }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            {% if project.client_name %}
+                                                <p class="text-muted mb-2">
+                                                    <i class="fas fa-building me-2"></i>
+                                                    <strong>Client:</strong> {{ project.client_name }}
+                                                </p>
+                                            {% endif %}
+                                            
+                                            {% if project.description %}
+                                                <p class="text-muted mb-3">
+                                                    {{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}
+                                                </p>
+                                            {% endif %}
+
+                                            <!-- Finding Statistics -->
+                                            <div class="row text-center mb-3">
+                                                <div class="col-6">
+                                                    <div class="fw-bold text-danger">{{ project.findings|selectattr('severity', 'equalto', 'critical')|list|length }}</div>
+                                                    <small class="text-muted">Critical</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="fw-bold text-warning">{{ project.findings|selectattr('severity', 'equalto', 'high')|list|length }}</div>
+                                                    <small class="text-muted">High</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="row text-center mb-3">
+                                                <div class="col-6">
+                                                    <div class="fw-bold text-success">{{ project.findings|selectattr('status', 'equalto', 'closed')|list|length }}</div>
+                                                    <small class="text-muted">Closed</small>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="fw-bold text-info">{{ project.findings|length }}</div>
+                                                    <small class="text-muted">Total</small>
+                                                </div>
+                                            </div>
+
+                                            <div class="d-grid gap-2">
+                                                <a href="{{ url_for('secure.project_detail', project_id=project.id) }}" 
+                                                   class="btn btn-danger">
+                                                    <i class="fas fa-eye me-2"></i>
+                                                    View Findings
+                                                </a>
+                                                {% if project.findings %}
+                                                    <div class="btn-group">
+                                                        <a href="{{ url_for('reports.preview_pentest_report', project_id=project.id) }}" 
+                                                           class="btn btn-outline-primary btn-sm" target="_blank">
+                                                            <i class="fas fa-eye me-1"></i>
+                                                            Preview Report
+                                                        </a>
+                                                        <a href="{{ url_for('reports.generate_pentest_report', project_id=project.id) }}" 
+                                                           class="btn btn-outline-success btn-sm" target="_blank">
+                                                            <i class="fas fa-download me-1"></i>
+                                                            Download PDF
+                                                        </a>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="card-footer text-muted small">
+                                            <div class="d-flex justify-content-between">
+                                                <span>
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ project.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ project.creator.full_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-shield-alt fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Penetration Testing Projects</h5>
+                            <p class="text-muted">Create your first project to get started with security assessments.</p>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#createProjectModal">
+                                <i class="fas fa-plus me-2"></i>
+                                Create First Project
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Project Modal -->
+<div class="modal fade" id="createProjectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    Create Penetration Testing Project
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('secure.create_project') }}" class="needs-validation" novalidate>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="projectName" class="form-label">
+                            <i class="fas fa-tag me-2"></i>Project Name
+                        </label>
+                        <input type="text" class="form-control" id="projectName" name="name" 
+                               required placeholder="Enter project name">
+                        <div class="invalid-feedback">
+                            Please provide a project name.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="clientName" class="form-label">
+                            <i class="fas fa-building me-2"></i>Client Name
+                        </label>
+                        <input type="text" class="form-control" id="clientName" name="client_name" 
+                               placeholder="Enter client or organization name">
+                        <small class="form-text text-muted">Optional but recommended for reporting</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="projectDescription" class="form-label">
+                            <i class="fas fa-align-left me-2"></i>Project Description
+                        </label>
+                        <textarea class="form-control" id="projectDescription" name="description" 
+                                  rows="4" placeholder="Describe the scope and objectives of this penetration test..."></textarea>
+                        <small class="form-text text-muted">Provide details about the testing scope, objectives, and any special requirements</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-plus me-2"></i>Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects to project cards
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

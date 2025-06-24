@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Nexus Flow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('flow.dashboard') }}">
+                            <i class="fas fa-project-diagram me-1"></i>Nexus Flow
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ project.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="text-gradient mb-2">
+                        <i class="fas fa-project-diagram me-3 text-success"></i>
+                        {{ project.name }}
+                    </h1>
+                    {% if project.description %}
+                        <p class="text-muted mb-3">{{ project.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createTaskModal">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Task
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="kanban-board" data-project-id="{{ project.id }}">
+        <!-- To Do Column -->
+        <div class="kanban-column" data-status="todo">
+            <div class="kanban-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-inbox me-2"></i>
+                    To Do
+                </span>
+                <span class="badge bg-secondary task-count">{{ tasks_by_status.todo|length }}</span>
+            </div>
+            <div class="kanban-body" data-status="todo">
+                {% for task in tasks_by_status.todo %}
+                    <div class="task-card" draggable="true" data-task-id="{{ task.id }}">
+                        <div class="task-title">{{ task.title }}</div>
+                        {% if task.description %}
+                            <div class="text-muted small mb-2">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+                        {% endif %}
+                        <div class="task-meta">
+                            <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}primary{% else %}secondary{% endif %} me-2">
+                                {{ task.priority.title() }}
+                            </span>
+                            {% if task.assigned_user %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ task.assigned_user.first_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if task.labels %}
+                            <div class="task-labels mt-2">
+                                {% for label in task.labels.split(',') if label.strip() %}
+                                    <span class="badge bg-info me-1">{{ label.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="task-actions mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ task.created_at.strftime('%b %d') }}
+                            </small>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Quick Add Form -->
+                <form class="quick-task-form mt-3" onsubmit="return false;">
+                    <input type="hidden" name="project_id" value="{{ project.id }}">
+                    <input type="hidden" name="status" value="todo">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" name="title" 
+                               placeholder="Add a task..." required>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="kanban-column" data-status="in_progress">
+            <div class="kanban-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-spinner me-2"></i>
+                    In Progress
+                </span>
+                <span class="badge bg-warning task-count">{{ tasks_by_status.in_progress|length }}</span>
+            </div>
+            <div class="kanban-body" data-status="in_progress">
+                {% for task in tasks_by_status.in_progress %}
+                    <div class="task-card" draggable="true" data-task-id="{{ task.id }}">
+                        <div class="task-title">{{ task.title }}</div>
+                        {% if task.description %}
+                            <div class="text-muted small mb-2">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+                        {% endif %}
+                        <div class="task-meta">
+                            <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}primary{% else %}secondary{% endif %} me-2">
+                                {{ task.priority.title() }}
+                            </span>
+                            {% if task.assigned_user %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ task.assigned_user.first_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if task.labels %}
+                            <div class="task-labels mt-2">
+                                {% for label in task.labels.split(',') if label.strip() %}
+                                    <span class="badge bg-info me-1">{{ label.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="task-actions mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ task.created_at.strftime('%b %d') }}
+                            </small>
+                        </div>
+                    </div>
+                {% endfor %}
+                
+                <!-- Quick Add Form -->
+                <form class="quick-task-form mt-3" onsubmit="return false;">
+                    <input type="hidden" name="project_id" value="{{ project.id }}">
+                    <input type="hidden" name="status" value="in_progress">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm" name="title" 
+                               placeholder="Add a task..." required>
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Done Column -->
+        <div class="kanban-column" data-status="done">
+            <div class="kanban-header d-flex justify-content-between align-items-center">
+                <span>
+                    <i class="fas fa-check me-2"></i>
+                    Done
+                </span>
+                <span class="badge bg-success task-count">{{ tasks_by_status.done|length }}</span>
+            </div>
+            <div class="kanban-body" data-status="done">
+                {% for task in tasks_by_status.done %}
+                    <div class="task-card" draggable="true" data-task-id="{{ task.id }}">
+                        <div class="task-title">{{ task.title }}</div>
+                        {% if task.description %}
+                            <div class="text-muted small mb-2">{{ task.description[:100] }}{% if task.description|length > 100 %}...{% endif %}</div>
+                        {% endif %}
+                        <div class="task-meta">
+                            <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}primary{% else %}secondary{% endif %} me-2">
+                                {{ task.priority.title() }}
+                            </span>
+                            {% if task.assigned_user %}
+                                <span class="badge bg-light text-dark">
+                                    <i class="fas fa-user me-1"></i>
+                                    {{ task.assigned_user.first_name }}
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if task.labels %}
+                            <div class="task-labels mt-2">
+                                {% for label in task.labels.split(',') if label.strip() %}
+                                    <span class="badge bg-info me-1">{{ label.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <div class="task-actions mt-2">
+                            <small class="text-muted">
+                                <i class="fas fa-calendar me-1"></i>
+                                {{ task.created_at.strftime('%b %d') }}
+                            </small>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Task Modal -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-tasks me-2"></i>
+                    Create New Task
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('flow.create_task') }}" class="needs-validation" novalidate>
+                <input type="hidden" name="project_id" value="{{ project.id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="taskTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="taskTitle" name="title" 
+                               required placeholder="Enter task title">
+                        <div class="invalid-feedback">Please provide a task title.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDescription" name="description" 
+                                  rows="3" placeholder="Describe the task..."></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="taskStatus" class="form-label">Status</label>
+                            <select class="form-select" id="taskStatus" name="status">
+                                <option value="todo" selected>To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="taskPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskPriority" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskAssigned" class="form-label">Assign To</label>
+                        <select class="form-select" id="taskAssigned" name="assigned_to">
+                            <option value="">Unassigned</option>
+                            {% for member in team_members %}
+                                <option value="{{ member.id }}">{{ member.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskLabels" class="form-label">Labels</label>
+                        <input type="text" class="form-control" id="taskLabels" name="labels" 
+                               placeholder="bug, feature, ui (comma separated)">
+                        <small class="form-text text-muted">Separate multiple labels with commas</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Create Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Task Detail Modal -->
+<div class="modal fade" id="taskDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-tasks me-2"></i>
+                    Task Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="taskDetailForm" class="needs-validation" novalidate>
+                <input type="hidden" id="taskDetailId" name="task_id">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="taskDetailTitle" class="form-label">Task Title</label>
+                        <input type="text" class="form-control" id="taskDetailTitle" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDetailDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="taskDetailDescription" name="description" rows="4"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="taskDetailPriority" class="form-label">Priority</label>
+                            <select class="form-select" id="taskDetailPriority" name="priority">
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="urgent">Urgent</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="taskDetailAssigned" class="form-label">Assign To</label>
+                            <select class="form-select" id="taskDetailAssigned" name="assigned_to">
+                                <option value="">Unassigned</option>
+                                {% for member in team_members %}
+                                    <option value="{{ member.id }}">{{ member.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taskDetailLabels" class="form-label">Labels</label>
+                        <input type="text" class="form-control" id="taskDetailLabels" name="labels">
+                    </div>
+                    
+                    <!-- Comments Section -->
+                    <div class="mb-3">
+                        <label class="form-label">Comments</label>
+                        <div id="taskComments" class="border rounded p-3 mb-2" style="max-height: 200px; overflow-y: auto;">
+                            <!-- Comments will be populated here -->
+                        </div>
+                        <form id="commentForm" class="mt-2">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="content" placeholder="Add a comment..." required>
+                                <button type="submit" class="btn btn-outline-primary">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<style>
+.drag-over {
+    background-color: rgba(37, 99, 235, 0.1);
+    border: 2px dashed var(--primary-color);
+}
+
+.task-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.task-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.quick-task-form {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.quick-task-form:hover,
+.quick-task-form:focus-within {
+    opacity: 1;
+}
+</style>
+{% endblock %}

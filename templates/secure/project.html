@@ -1,0 +1,420 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Nexus Secure{% endblock %}
+
+{% block content %}
+<div class="container-fluid findings-container" data-project-id="{{ project.id }}">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('secure.dashboard') }}">
+                            <i class="fas fa-shield-alt me-1"></i>Nexus Secure
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ project.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="text-gradient mb-2">
+                        <i class="fas fa-shield-alt me-3 text-danger"></i>
+                        {{ project.name }}
+                    </h1>
+                    {% if project.client_name %}
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-building me-2"></i>
+                            <strong>Client:</strong> {{ project.client_name }}
+                        </p>
+                    {% endif %}
+                    {% if project.description %}
+                        <p class="text-muted mb-3">{{ project.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="text-end">
+                    <button class="btn btn-danger mb-2" id="createFindingBtn">
+                        <i class="fas fa-plus me-2"></i>
+                        Add Finding
+                    </button>
+                    <br>
+                    {% if findings %}
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm" id="previewReportBtn">
+                                <i class="fas fa-eye me-1"></i>
+                                Preview Report
+                            </button>
+                            <button class="btn btn-outline-success btn-sm" id="generateReportBtn">
+                                <i class="fas fa-download me-1"></i>
+                                Generate PDF
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-danger">{{ finding_stats.critical }}</div>
+                <div class="stat-label">Critical</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-warning">{{ finding_stats.high }}</div>
+                <div class="stat-label">High</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-primary">{{ finding_stats.medium }}</div>
+                <div class="stat-label">Medium</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-success">{{ finding_stats.low }}</div>
+                <div class="stat-label">Low</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-info">{{ finding_stats.informational }}</div>
+                <div class="stat-label">Info</div>
+            </div>
+        </div>
+        <div class="col-md-2 mb-3">
+            <div class="stat-card">
+                <div class="stat-number text-secondary">{{ findings|length }}</div>
+                <div class="stat-label">Total</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="filters-section">
+                <form id="findingFilters" class="row g-3">
+                    <div class="col-md-3">
+                        <label for="findingSearch" class="form-label">Search Findings</label>
+                        <input type="text" class="form-control" id="findingSearch" 
+                               placeholder="Search by title or description...">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="severityFilter" class="form-label">Severity</label>
+                        <select class="form-select" id="severityFilter" name="severity">
+                            <option value="">All Severities</option>
+                            <option value="critical" {% if severity_filter == 'critical' %}selected{% endif %}>Critical</option>
+                            <option value="high" {% if severity_filter == 'high' %}selected{% endif %}>High</option>
+                            <option value="medium" {% if severity_filter == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="low" {% if severity_filter == 'low' %}selected{% endif %}>Low</option>
+                            <option value="informational" {% if severity_filter == 'informational' %}selected{% endif %}>Informational</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="statusFilter" class="form-label">Status</label>
+                        <select class="form-select" id="statusFilter" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
+                            <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                            <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
+                            <option value="risk_accepted" {% if status_filter == 'risk_accepted' %}selected{% endif %}>Risk Accepted</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="sortFilter" class="form-label">Sort By</label>
+                        <select class="form-select" id="sortFilter" name="sort">
+                            <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Created Date</option>
+                            <option value="severity" {% if sort_by == 'severity' %}selected{% endif %}>Severity</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="button" class="btn btn-outline-secondary me-2" id="clearFilters">
+                            <i class="fas fa-times me-2"></i>Clear Filters
+                        </button>
+                        <span class="text-muted" id="resultsCount">
+                            {{ findings|length }} finding{{ 's' if findings|length != 1 else '' }}
+                        </span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Findings List -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bug me-2"></i>
+                        Security Findings
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if findings %}
+                        <div class="findings-list">
+                            {% for finding in findings %}
+                                <div class="finding-item border-bottom p-3" 
+                                     data-finding-id="{{ finding.id }}"
+                                     data-severity="{{ finding.severity }}"
+                                     data-status="{{ finding.status }}">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <div class="d-flex align-items-center mb-2">
+                                                <h6 class="finding-title mb-0 me-3">{{ finding.title }}</h6>
+                                                <span class="severity-{{ finding.severity }} me-2">
+                                                    {{ finding.severity.title() }}
+                                                </span>
+                                                <span class="status-{{ finding.status }}">
+                                                    {{ finding.status.replace('_', ' ').title() }}
+                                                </span>
+                                            </div>
+                                            
+                                            <p class="finding-description text-muted mb-2">
+                                                {{ finding.description[:200] }}{% if finding.description|length > 200 %}...{% endif %}
+                                            </p>
+                                            
+                                            <div class="finding-meta d-flex align-items-center text-muted small">
+                                                {% if finding.cvss_score %}
+                                                    <span class="me-3">
+                                                        <i class="fas fa-chart-line me-1"></i>
+                                                        CVSS: {{ finding.cvss_score }}
+                                                    </span>
+                                                {% endif %}
+                                                {% if finding.cwe_id %}
+                                                    <span class="me-3">
+                                                        <i class="fas fa-code me-1"></i>
+                                                        CWE-{{ finding.cwe_id }}
+                                                    </span>
+                                                {% endif %}
+                                                <span class="me-3">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ finding.created_at.strftime('%b %d, %Y') }}
+                                                </span>
+                                                <span>
+                                                    <i class="fas fa-user me-1"></i>
+                                                    {{ finding.created_by_user.full_name }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="finding-actions">
+                                            <div class="btn-group">
+                                                <button class="btn btn-sm btn-outline-primary" 
+                                                        onclick="showFindingDetails({{ finding.id }})">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger delete-finding-btn" 
+                                                        data-finding-id="{{ finding.id }}">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-bug fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Security Findings</h5>
+                            <p class="text-muted">Start documenting security vulnerabilities for this project.</p>
+                            <button class="btn btn-danger" id="createFindingBtn">
+                                <i class="fas fa-plus me-2"></i>
+                                Add First Finding
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Finding Modal -->
+<div class="modal fade" id="createFindingModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-bug me-2"></i>
+                    Add Security Finding
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="createFindingForm" class="needs-validation" novalidate>
+                <input type="hidden" name="project_id" value="{{ project.id }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="createFindingTitle" class="form-label">Finding Title</label>
+                            <input type="text" class="form-control" id="createFindingTitle" name="title" 
+                                   required placeholder="Enter a descriptive title for the finding">
+                            <div class="invalid-feedback">Please provide a finding title.</div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createFindingSeverity" class="form-label">Severity</label>
+                            <select class="form-select" id="createFindingSeverity" name="severity" required>
+                                <option value="">Select Severity</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="informational">Informational</option>
+                            </select>
+                            <div class="invalid-feedback">Please select a severity level.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="createFindingCvss" class="form-label">CVSS Score</label>
+                            <input type="number" class="form-control" id="createFindingCvss" name="cvss_score" 
+                                   min="0" max="10" step="0.1" placeholder="0.0">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createFindingCwe" class="form-label">CWE ID</label>
+                            <input type="text" class="form-control" id="createFindingCwe" name="cwe_id" 
+                                   placeholder="e.g., 89">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="createFindingUrl" class="form-label">Affected URL</label>
+                            <input type="url" class="form-control" id="createFindingUrl" name="affected_url" 
+                                   placeholder="https://example.com/vulnerable-endpoint">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="createFindingDescription" class="form-label">Description</label>
+                        <textarea class="form-control rich-text-editor" id="createFindingDescription" 
+                                  name="description" rows="6" required 
+                                  placeholder="Provide a detailed description of the security finding..."></textarea>
+                        <div class="invalid-feedback">Please provide a description.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="createFindingRemediation" class="form-label">Remediation</label>
+                        <textarea class="form-control rich-text-editor" id="createFindingRemediation" 
+                                  name="remediation" rows="4" 
+                                  placeholder="Describe how to fix this vulnerability..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancel
+                    </button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-plus me-2"></i>Add Finding
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Finding Detail Modal -->
+<div class="modal fade" id="findingDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-bug me-2"></i>
+                    Finding Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editFindingForm" class="needs-validation" novalidate>
+                <input type="hidden" id="findingDetailId" name="finding_id">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="findingDetailTitle" class="form-label">Finding Title</label>
+                            <input type="text" class="form-control" id="findingDetailTitle" name="title" required>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="findingDetailSeverity" class="form-label">Severity</label>
+                            <select class="form-select" id="findingDetailSeverity" name="severity" required>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                                <option value="informational">Informational</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label for="findingDetailStatus" class="form-label">Status</label>
+                            <select class="form-select" id="findingDetailStatus" name="status" required>
+                                <option value="open">Open</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="closed">Closed</option>
+                                <option value="risk_accepted">Risk Accepted</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="findingDetailCvssScore" class="form-label">CVSS Score</label>
+                            <input type="number" class="form-control" id="findingDetailCvssScore" name="cvss_score" 
+                                   min="0" max="10" step="0.1">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label for="findingDetailCweId" class="form-label">CWE ID</label>
+                            <input type="text" class="form-control" id="findingDetailCweId" name="cwe_id">
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Severity Badge</label>
+                            <div>
+                                <span class="severity-critical finding-severity-badge">Critical</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="findingDetailAffectedUrl" class="form-label">Affected URL</label>
+                        <input type="url" class="form-control" id="findingDetailAffectedUrl" name="affected_url">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="findingDetailDescription" class="form-label">Description</label>
+                        <textarea class="form-control rich-text-editor" id="findingDetailDescription" 
+                                  name="description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="findingDetailRemediation" class="form-label">Remediation</label>
+                        <textarea class="form-control rich-text-editor" id="findingDetailRemediation" 
+                                  name="remediation" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Close
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function showFindingDetails(findingId) {
+    if (window.findingsManager) {
+        window.findingsManager.showFindingDetails(findingId);
+    }
+}
+</script>
+{% endblock %}

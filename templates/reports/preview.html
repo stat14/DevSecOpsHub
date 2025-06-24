@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+
+{% block title %}Report Preview - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="text-gradient mb-2">
+                        <i class="fas fa-file-pdf me-3 text-danger"></i>
+                        Report Preview
+                    </h1>
+                    <p class="text-muted">{{ project.name }} - Penetration Testing Report</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('reports.generate_pentest_report', project_id=project.id) }}" 
+                       class="btn btn-success" target="_blank">
+                        <i class="fas fa-download me-2"></i>
+                        Download PDF
+                    </a>
+                    <button class="btn btn-secondary ms-2" onclick="window.close()">
+                        <i class="fas fa-times me-2"></i>
+                        Close Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Content -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Cover Section -->
+                    <div class="text-center mb-5 pb-4 border-bottom">
+                        <h2 class="display-4 mb-4">Penetration Testing Report</h2>
+                        
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr class="table-primary">
+                                            <th colspan="2" class="text-center">
+                                                <strong>Document Information</strong>
+                                            </th>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Document Title</strong></td>
+                                            <td>Penetration Testing Report</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Client</strong></td>
+                                            <td>{{ project.client_name or 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Project Name</strong></td>
+                                            <td>{{ project.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Document Version</strong></td>
+                                            <td>1.0</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Date</strong></td>
+                                            <td>{{ moment().format('MMMM DD, YYYY') }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Classification</strong></td>
+                                            <td><span class="badge bg-danger">Confidential</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Executive Summary -->
+                    <div class="mb-5">
+                        <h3 class="border-bottom pb-2 mb-4">1. Executive Summary</h3>
+                        
+                        <p class="mb-4">
+                            This report presents the findings of a penetration test conducted on 
+                            {{ project.client_name or 'the client' }}'s {{ project.name }} system. 
+                            The assessment was performed to identify security vulnerabilities that could 
+                            potentially be exploited by malicious actors.
+                        </p>
+
+                        <h5 class="mb-3">Key Findings</h5>
+                        <ul class="mb-4">
+                            <li>A total of <strong>{{ finding_stats.total }}</strong> vulnerabilities were identified</li>
+                            <li><strong>{{ finding_stats.critical }}</strong> Critical vulnerabilities</li>
+                            <li><strong>{{ finding_stats.high }}</strong> High-risk vulnerabilities</li>
+                            <li><strong>{{ finding_stats.medium }}</strong> Medium-risk vulnerabilities</li>
+                            <li><strong>{{ finding_stats.low }}</strong> Low-risk vulnerabilities</li>
+                            <li><strong>{{ finding_stats.informational }}</strong> Informational findings</li>
+                        </ul>
+
+                        {% set critical_high_findings = findings | selectattr('severity', 'in', ['critical', 'high']) | list %}
+                        {% if critical_high_findings %}
+                            <h5 class="mb-3">Critical and High-Risk Issues</h5>
+                            <p class="mb-3">The most significant security issues identified during the assessment include:</p>
+                            <ol>
+                                {% for finding in critical_high_findings[:5] %}
+                                    <li class="mb-2">
+                                        <strong>{{ finding.title }}</strong>: 
+                                        {{ finding.description[:200] }}{% if finding.description|length > 200 %}...{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        {% endif %}
+                    </div>
+
+                    <!-- Findings Summary -->
+                    <div class="mb-5">
+                        <h3 class="border-bottom pb-2 mb-4">2. Findings Summary</h3>
+                        
+                        <h5 class="mb-3">Risk Rating Methodology</h5>
+                        <p class="mb-4">Vulnerabilities are rated according to the following risk levels:</p>
+                        
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Risk Level</th>
+                                        <th>CVSS Score Range</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-danger">
+                                        <td><strong>Critical</strong></td>
+                                        <td>9.0 - 10.0</td>
+                                        <td>Vulnerabilities that pose an immediate threat with severe consequences</td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td><strong>High</strong></td>
+                                        <td>7.0 - 8.9</td>
+                                        <td>Vulnerabilities that pose a significant risk with substantial impact</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td><strong>Medium</strong></td>
+                                        <td>4.0 - 6.9</td>
+                                        <td>Vulnerabilities that pose a moderate risk with moderate impact</td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><strong>Low</strong></td>
+                                        <td>0.1 - 3.9</td>
+                                        <td>Vulnerabilities that pose a minimal risk with limited impact</td>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <td><strong>Informational</strong></td>
+                                        <td>0.0</td>
+                                        <td>Informational findings that do not pose a direct security risk</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h5 class="mb-3">Risk Distribution</h5>
+                        <div class="table-responsive mb-4">
+                            <table class="table table-bordered">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Risk Level</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="table-danger">
+                                        <td><strong>Critical</strong></td>
+                                        <td>{{ finding_stats.critical }}</td>
+                                        <td>{{ "%.1f"|format((finding_stats.critical / finding_stats.total * 100) if finding_stats.total > 0 else 0) }}%</td>
+                                    </tr>
+                                    <tr class="table-warning">
+                                        <td><strong>High</strong></td>
+                                        <td>{{ finding_stats.high }}</td>
+                                        <td>{{ "%.1f"|format((finding_stats.high / finding_stats.total * 100) if finding_stats.total > 0 else 0) }}%</td>
+                                    </tr>
+                                    <tr class="table-primary">
+                                        <td><strong>Medium</strong></td>
+                                        <td>{{ finding_stats.medium }}</td>
+                                        <td>{{ "%.1f"|format((finding_stats.medium / finding_stats.total * 100) if finding_stats.total > 0 else 0) }}%</td>
+                                    </tr>
+                                    <tr class="table-success">
+                                        <td><strong>Low</strong></td>
+                                        <td>{{ finding_stats.low }}</td>
+                                        <td>{{ "%.1f"|format((finding_stats.low / finding_stats.total * 100) if finding_stats.total > 0 else 0) }}%</td>
+                                    </tr>
+                                    <tr class="table-info">
+                                        <td><strong>Informational</strong></td>
+                                        <td>{{ finding_stats.informational }}</td>
+                                        <td>{{ "%.1f"|format((finding_stats.informational / finding_stats.total * 100) if finding_stats.total > 0 else 0) }}%</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Findings -->
+                    <div class="mb-5">
+                        <h3 class="border-bottom pb-2 mb-4">3. Detailed Findings</h3>
+                        
+                        {% if findings %}
+                            {% for finding in findings %}
+                                <div class="finding-detail mb-5 pb-4 {% if not loop.last %}border-bottom{% endif %}">
+                                    <h4 class="mb-3">3.{{ loop.index }} {{ finding.title }}</h4>
+                                    
+                                    <!-- Finding Metadata -->
+                                    <div class="table-responsive mb-3">
+                                        <table class="table table-bordered table-sm">
+                                            <tbody>
+                                                <tr>
+                                                    <td class="table-{% if finding.severity == 'critical' %}danger{% elif finding.severity == 'high' %}warning{% elif finding.severity == 'medium' %}primary{% elif finding.severity == 'low' %}success{% else %}info{% endif %} fw-bold">
+                                                        Risk Level
+                                                    </td>
+                                                    <td>{{ finding.severity.title() }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="fw-bold">Status</td>
+                                                    <td>
+                                                        <span class="status-{{ finding.status }}">
+                                                            {{ finding.status.replace('_', ' ').title() }}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                                {% if finding.cvss_score %}
+                                                    <tr>
+                                                        <td class="fw-bold">CVSS Score</td>
+                                                        <td>{{ finding.cvss_score }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if finding.cwe_id %}
+                                                    <tr>
+                                                        <td class="fw-bold">CWE</td>
+                                                        <td>CWE-{{ finding.cwe_id }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if finding.affected_url %}
+                                                    <tr>
+                                                        <td class="fw-bold">Affected URL</td>
+                                                        <td><code>{{ finding.affected_url }}</code></td>
+                                                    </tr>
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <!-- Description -->
+                                    <h6 class="fw-bold mb-2">Description:</h6>
+                                    <div class="mb-3 p-3 bg-light rounded">
+                                        {{ finding.description | safe }}
+                                    </div>
+
+                                    <!-- Remediation -->
+                                    {% if finding.remediation %}
+                                        <h6 class="fw-bold mb-2">Remediation:</h6>
+                                        <div class="mb-3 p-3 bg-success-subtle rounded">
+                                            {{ finding.remediation | safe }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-shield-check fa-3x text-success mb-3"></i>
+                                <h5>No Vulnerabilities Found</h5>
+                                <p class="text-muted">The security assessment did not identify any vulnerabilities at this time.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Recommendations -->
+                    <div class="mb-5">
+                        <h3 class="border-bottom pb-2 mb-4">4. Recommendations</h3>
+                        
+                        <p class="mb-4">
+                            Based on the findings identified during this penetration test, we recommend 
+                            addressing vulnerabilities in the following priority order:
+                        </p>
+
+                        <h5 class="mb-3">Remediation Priorities</h5>
+                        
+                        <h6 class="text-danger mb-2">1. Critical Vulnerabilities</h6>
+                        <p class="mb-3">
+                            Address all critical severity vulnerabilities immediately as they pose an 
+                            immediate threat to the organization.
+                        </p>
+
+                        <h6 class="text-warning mb-2">2. High-Risk Vulnerabilities</h6>
+                        <p class="mb-3">
+                            Remediate high-risk vulnerabilities within 30 days as they represent 
+                            significant security risks.
+                        </p>
+
+                        <h6 class="text-primary mb-2">3. Medium-Risk Vulnerabilities</h6>
+                        <p class="mb-3">
+                            Plan remediation for medium-risk vulnerabilities within 90 days.
+                        </p>
+
+                        <h6 class="text-success mb-2">4. Low-Risk and Informational Findings</h6>
+                        <p class="mb-3">
+                            Address these findings as part of regular security maintenance cycles.
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="text-center text-muted">
+                        <hr>
+                        <p class="mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>
+                            © {{ moment().format('YYYY') }} Nexus Platform - Confidential
+                        </p>
+                        <p class="small">
+                            Generated on {{ moment().format('MMMM DD, YYYY [at] h:mm A') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Add print functionality
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+        e.preventDefault();
+        window.print();
+    }
+});
+
+// Add moment.js functionality for dates
+window.moment = function() {
+    return {
+        format: function(format) {
+            const now = new Date();
+            if (format === 'YYYY') return now.getFullYear();
+            if (format === 'MMMM DD, YYYY') return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            if (format === 'MMMM DD, YYYY [at] h:mm A') return now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' at ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+            return now.toLocaleDateString();
+        }
+    };
+};
+</script>
+
+<style>
+@media print {
+    .btn, .breadcrumb, nav {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .finding-detail {
+        page-break-inside: avoid;
+    }
+    
+    h3, h4 {
+        page-break-after: avoid;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Nexus Platform{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-tachometer-alt me-3"></i>
+                Admin Dashboard
+            </h1>
+            <p class="text-muted">Central command center for the Nexus Platform</p>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_users }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.total_projects }}</div>
+                <div class="stat-label">Total Projects</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.critical_findings }}</div>
+                <div class="stat-label">Critical Findings</div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="stat-card">
+                <div class="stat-number">{{ stats.completed_tasks }}</div>
+                <div class="stat-label">Completed Tasks</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Cards -->
+    <div class="row mb-5">
+        <div class="col-lg-6 mb-4">
+            <a href="{{ url_for('admin.nexus_secure') }}" class="dashboard-card nexus-secure-card">
+                <div class="card-body">
+                    <i class="fas fa-shield-alt mb-3"></i>
+                    <h3>Nexus Secure</h3>
+                    <p>Penetration Testing as a Service Platform</p>
+                    <div class="row text-center mt-4">
+                        <div class="col">
+                            <div class="fw-bold">{{ stats.active_pentest_projects }}</div>
+                            <small>Active Projects</small>
+                        </div>
+                        <div class="col">
+                            <div class="fw-bold">{{ stats.total_findings }}</div>
+                            <small>Total Findings</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <a href="{{ url_for('admin.nexus_flow') }}" class="dashboard-card nexus-flow-card">
+                <div class="card-body">
+                    <i class="fas fa-project-diagram mb-3"></i>
+                    <h3>Nexus Flow</h3>
+                    <p>Agile Project Management for Developers</p>
+                    <div class="row text-center mt-4">
+                        <div class="col">
+                            <div class="fw-bold">{{ stats.active_dev_projects }}</div>
+                            <small>Active Projects</small>
+                        </div>
+                        <div class="col">
+                            <div class="fw-bold">{{ stats.total_tasks }}</div>
+                            <small>Total Tasks</small>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>
+                        Recent Activity
+                    </h5>
+                    <a href="{{ url_for('activity.logs') }}" class="btn btn-sm btn-outline-primary">
+                        View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if recent_activities %}
+                        <div class="activity-timeline">
+                            {% for activity in recent_activities %}
+                                <div class="activity-item d-flex align-items-start mb-3">
+                                    <div class="activity-icon me-3">
+                                        <i class="fas fa-{% if activity.action == 'login' %}sign-in-alt{% elif activity.action == 'create_user' %}user-plus{% elif activity.action == 'create_project' %}plus{% elif activity.action == 'create_finding' %}bug{% elif activity.action == 'create_task' %}tasks{% else %}circle{% endif %} text-primary"></i>
+                                    </div>
+                                    <div class="activity-content flex-grow-1">
+                                        <div class="fw-medium">{{ activity.user.full_name }}</div>
+                                        <div class="text-muted small">{{ activity.description }}</div>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-clock me-1"></i>
+                                            {{ activity.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                            <p>No recent activity to display</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- User Distribution -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        User Distribution
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="userDistributionChart" width="300" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bolt me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-user-plus me-2"></i>
+                                Manage Users
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('admin.projects') }}" class="btn btn-outline-success w-100">
+                                <i class="fas fa-project-diagram me-2"></i>
+                                Manage Projects
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('activity.logs') }}" class="btn btn-outline-info w-100">
+                                <i class="fas fa-chart-line me-2"></i>
+                                View Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('activity.logs') }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-cog me-2"></i>
+                                System Settings
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // User Distribution Chart
+    const ctx = document.getElementById('userDistributionChart').getContext('2d');
+    
+    const userRoles = {{ user_roles | tojsonfilter }};
+    const labels = userRoles.map(role => role[0].replace('_', ' ').toUpperCase());
+    const data = userRoles.map(role => role[1]);
+    const colors = [
+        '#dc2626', // super_admin - red
+        '#d97706', // admin - orange
+        '#059669', // pentester - green
+        '#2563eb', // developer - blue
+        '#7c3aed'  // client - purple
+    ];
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 20,
+                        usePointStyle: true
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

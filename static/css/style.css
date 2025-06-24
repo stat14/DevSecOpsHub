@@ -1,0 +1,667 @@
+/* Nexus Platform Styles */
+:root {
+    --primary-color: #2563eb;
+    --primary-dark: #1d4ed8;
+    --secondary-color: #64748b;
+    --success-color: #059669;
+    --warning-color: #d97706;
+    --danger-color: #dc2626;
+    --info-color: #0284c7;
+    --light-bg: #f8fafc;
+    --dark-bg: #1e293b;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --radius: 0.5rem;
+    --radius-lg: 0.75rem;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--light-bg);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* Layout */
+.main-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrapper {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* Navigation */
+.navbar {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    box-shadow: var(--shadow-md);
+    padding: 0.75rem 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: white !important;
+    text-decoration: none;
+}
+
+.navbar-brand:hover {
+    color: #e2e8f0 !important;
+}
+
+.navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    border-radius: var(--radius);
+    margin: 0 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white !important;
+}
+
+.navbar-nav .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white !important;
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--light-bg) 0%, white 100%);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+    padding: 1.25rem 1.5rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Dashboard Cards */
+.dashboard-card {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    transition: all 0.3s ease;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: var(--shadow-lg);
+    color: white;
+    text-decoration: none;
+}
+
+.dashboard-card .card-body {
+    text-align: center;
+}
+
+.dashboard-card h3 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-card p {
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.dashboard-card i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.8;
+}
+
+/* Nexus Secure Card */
+.nexus-secure-card {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
+}
+
+/* Nexus Flow Card */
+.nexus-flow-card {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+}
+
+/* Buttons */
+.btn {
+    border-radius: var(--radius);
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1e40af 100%);
+    color: white;
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+    color: white;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
+    color: white;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Forms */
+.form-control {
+    border-radius: var(--radius);
+    border: 2px solid var(--border-color);
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    background-color: white;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.form-select {
+    border-radius: var(--radius);
+    border: 2px solid var(--border-color);
+    padding: 0.75rem;
+    background-color: white;
+}
+
+/* Severity Badges */
+.severity-critical {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.severity-high {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.severity-medium {
+    background: linear-gradient(135deg, #eab308 0%, #a16207 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.severity-low {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.severity-informational {
+    background: linear-gradient(135deg, var(--info-color) 0%, #0369a1 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Status Badges */
+.status-open {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #b91c1c 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-in_progress {
+    background: linear-gradient(135deg, var(--warning-color) 0%, #b45309 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-closed {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-risk_accepted {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #475569 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Task Status Badges */
+.status-todo {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, #475569 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-done {
+    background: linear-gradient(135deg, var(--success-color) 0%, #047857 100%);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Kanban Board */
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem;
+}
+
+.kanban-column {
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    min-height: 500px;
+}
+
+.kanban-header {
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, var(--light-bg) 0%, white 100%);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.kanban-body {
+    padding: 1rem;
+    min-height: 400px;
+}
+
+.task-card {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    cursor: grab;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-sm);
+}
+
+.task-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+}
+
+.task-card:active {
+    cursor: grabbing;
+}
+
+.task-card.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.task-title {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.task-meta {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.75rem;
+}
+
+/* Statistics Cards */
+.stat-card {
+    background: linear-gradient(135deg, white 0%, var(--light-bg) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.875rem;
+    letter-spacing: 0.5px;
+}
+
+/* Tables */
+.table {
+    background: white;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, var(--light-bg) 0%, white 100%);
+    border-bottom: 2px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-primary);
+    padding: 1rem;
+}
+
+.table tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: var(--light-bg);
+}
+
+/* Modals */
+.modal-content {
+    border: none;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    background: linear-gradient(135deg, var(--light-bg) 0%, white 100%);
+    border-bottom: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1.5rem;
+}
+
+/* Alerts */
+.alert {
+    border: none;
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    border-left: 4px solid;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    color: #166534;
+    border-left-color: var(--success-color);
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    color: #991b1b;
+    border-left-color: var(--danger-color);
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    color: #92400e;
+    border-left-color: var(--warning-color);
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+    color: #1e40af;
+    border-left-color: var(--info-color);
+}
+
+/* Filters and Controls */
+.filters-section {
+    background: white;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-sm);
+}
+
+.filter-group {
+    display: flex;
+    gap: 1rem;
+    align-items: end;
+    flex-wrap: wrap;
+}
+
+/* Progress Indicators */
+.progress {
+    height: 0.75rem;
+    border-radius: var(--radius);
+    background-color: var(--border-color);
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    transition: width 0.6s ease;
+}
+
+/* Loading States */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 1rem;
+    }
+    
+    .kanban-board {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.slide-in {
+    animation: slideIn 0.3s ease-out;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --light-bg: #1e293b;
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --border-color: #334155;
+    }
+    
+    body {
+        background-color: var(--dark-bg);
+        color: var(--text-primary);
+    }
+    
+    .card {
+        background: #2d3748;
+        color: var(--text-primary);
+    }
+    
+    .form-control {
+        background-color: #2d3748;
+        border-color: var(--border-color);
+        color: var(--text-primary);
+    }
+    
+    .table {
+        background: #2d3748;
+        color: var(--text-primary);
+    }
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-hover:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.border-gradient {
+    border: 2px solid;
+    border-image: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) 1;
+}
+
+.glass-effect {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}

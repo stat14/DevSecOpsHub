@@ -1,0 +1,442 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - Client Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('client.dashboard') }}">
+                            <i class="fas fa-eye me-1"></i>Client Portal
+                        </a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ project.name }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="text-gradient mb-2">
+                        <i class="fas fa-{% if project.project_type == 'pentest' %}shield-alt text-danger{% else %}code text-success{% endif %} me-3"></i>
+                        {{ project.name }}
+                    </h1>
+                    {% if project.client_name %}
+                        <p class="text-muted mb-1">
+                            <i class="fas fa-building me-2"></i>
+                            <strong>Client:</strong> {{ project.client_name }}
+                        </p>
+                    {% endif %}
+                    {% if project.description %}
+                        <p class="text-muted mb-3">{{ project.description }}</p>
+                    {% endif %}
+                    <span class="badge bg-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}primary{% else %}secondary{% endif %} mb-3">
+                        {{ project.status.title() }} Project
+                    </span>
+                </div>
+                <div class="text-end">
+                    {% if project.project_type == 'pentest' and findings %}
+                        <a href="{{ url_for('reports.generate_pentest_report', project_id=project.id) }}" 
+                           class="btn btn-success" target="_blank">
+                            <i class="fas fa-download me-2"></i>
+                            Download Security Report
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if project.project_type == 'pentest' %}
+        <!-- Security Assessment Project -->
+        
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-danger">{{ finding_stats.critical }}</div>
+                    <div class="stat-label">Critical</div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-warning">{{ finding_stats.high }}</div>
+                    <div class="stat-label">High</div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-primary">{{ finding_stats.medium }}</div>
+                    <div class="stat-label">Medium</div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-success">{{ finding_stats.low }}</div>
+                    <div class="stat-label">Low</div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-info">{{ finding_stats.informational }}</div>
+                    <div class="stat-label">Info</div>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-secondary">{{ findings|length }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resolution Progress -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Resolution Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% set total_findings = findings|length %}
+                        {% set closed_findings = finding_stats.closed %}
+                        {% set progress_percent = (closed_findings / total_findings * 100) if total_findings > 0 else 0 %}
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-medium">Overall Resolution Progress</span>
+                            <span class="text-muted">{{ closed_findings }}/{{ total_findings }} findings resolved</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ progress_percent }}%" 
+                                 aria-valuenow="{{ progress_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format(progress_percent) }}%
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="text-danger fw-bold">{{ finding_stats.open }}</div>
+                                <small class="text-muted">Open Issues</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-success fw-bold">{{ finding_stats.closed }}</div>
+                                <small class="text-muted">Resolved</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-primary fw-bold">
+                                    {{ progress_percent|round(1) }}%
+                                </div>
+                                <small class="text-muted">Complete</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-warning fw-bold">
+                                    {% if total_findings > 0 %}
+                                        {{ ((total_findings - closed_findings) / total_findings * 100)|round(0)|int }} days
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                                <small class="text-muted">Est. Remaining</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Findings -->
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-bug me-2"></i>
+                            Security Findings
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if findings %}
+                            <div class="findings-list">
+                                {% for finding in findings %}
+                                    <div class="finding-item border-bottom p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <h6 class="finding-title mb-0 me-3">{{ finding.title }}</h6>
+                                                    <span class="severity-{{ finding.severity }} me-2">
+                                                        {{ finding.severity.title() }}
+                                                    </span>
+                                                    <span class="status-{{ finding.status }}">
+                                                        {{ finding.status.replace('_', ' ').title() }}
+                                                    </span>
+                                                </div>
+                                                
+                                                <p class="finding-description text-muted mb-2">
+                                                    {{ finding.description[:200] }}{% if finding.description|length > 200 %}...{% endif %}
+                                                </p>
+                                                
+                                                {% if finding.remediation %}
+                                                    <div class="mt-2">
+                                                        <strong class="text-success">Remediation:</strong>
+                                                        <p class="text-muted mb-0">
+                                                            {{ finding.remediation[:150] }}{% if finding.remediation|length > 150 %}...{% endif %}
+                                                        </p>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <div class="finding-meta d-flex align-items-center text-muted small mt-2">
+                                                    {% if finding.cvss_score %}
+                                                        <span class="me-3">
+                                                            <i class="fas fa-chart-line me-1"></i>
+                                                            CVSS: {{ finding.cvss_score }}
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if finding.cwe_id %}
+                                                        <span class="me-3">
+                                                            <i class="fas fa-code me-1"></i>
+                                                            CWE-{{ finding.cwe_id }}
+                                                        </span>
+                                                    {% endif %}
+                                                    <span class="me-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        {{ finding.created_at.strftime('%b %d, %Y') }}
+                                                    </span>
+                                                    {% if finding.status == 'closed' %}
+                                                        <span class="text-success">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            Resolved: {{ finding.updated_at.strftime('%b %d, %Y') }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-shield-check fa-3x text-success mb-3"></i>
+                                <h5 class="text-muted">No Security Issues Found</h5>
+                                <p class="text-muted">The security assessment has not identified any vulnerabilities yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Development Project -->
+        
+        <!-- Task Statistics -->
+        <div class="row mb-4">
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-secondary">{{ task_stats.todo }}</div>
+                    <div class="stat-label">To Do</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-warning">{{ task_stats.in_progress }}</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card">
+                    <div class="stat-number text-success">{{ task_stats.done }}</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Development Progress -->
+        <div class="row mb-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-line me-2"></i>
+                            Development Progress
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% set total_tasks = tasks|length %}
+                        {% set completed_tasks = task_stats.done %}
+                        {% set progress_percent = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0 %}
+                        
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-medium">Project Completion</span>
+                            <span class="text-muted">{{ completed_tasks }}/{{ total_tasks }} tasks completed</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 20px;">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {{ progress_percent }}%" 
+                                 aria-valuenow="{{ progress_percent }}" 
+                                 aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format(progress_percent) }}%
+                            </div>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="text-secondary fw-bold">{{ task_stats.todo }}</div>
+                                <small class="text-muted">Pending</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-warning fw-bold">{{ task_stats.in_progress }}</div>
+                                <small class="text-muted">Active</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-success fw-bold">{{ task_stats.done }}</div>
+                                <small class="text-muted">Done</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="text-primary fw-bold">{{ progress_percent|round(1) }}%</div>
+                                <small class="text-muted">Complete</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Overview -->
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tasks me-2"></i>
+                            Development Tasks
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        {% if tasks %}
+                            <div class="task-list">
+                                {% for task in tasks %}
+                                    <div class="task-item border-bottom p-3">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <h6 class="task-title mb-0 me-3">{{ task.title }}</h6>
+                                                    <span class="status-{{ task.status }} me-2">
+                                                        {{ task.status.replace('_', ' ').title() }}
+                                                    </span>
+                                                    <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}primary{% else %}secondary{% endif %}">
+                                                        {{ task.priority.title() }}
+                                                    </span>
+                                                </div>
+                                                
+                                                {% if task.description %}
+                                                    <p class="task-description text-muted mb-2">
+                                                        {{ task.description[:200] }}{% if task.description|length > 200 %}...{% endif %}
+                                                    </p>
+                                                {% endif %}
+                                                
+                                                {% if task.labels %}
+                                                    <div class="task-labels mb-2">
+                                                        {% for label in task.labels.split(',') if label.strip() %}
+                                                            <span class="badge bg-info me-1">{{ label.strip() }}</span>
+                                                        {% endfor %}
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <div class="task-meta d-flex align-items-center text-muted small">
+                                                    <span class="me-3">
+                                                        <i class="fas fa-calendar me-1"></i>
+                                                        {{ task.created_at.strftime('%b %d, %Y') }}
+                                                    </span>
+                                                    {% if task.assigned_user %}
+                                                        <span class="me-3">
+                                                            <i class="fas fa-user me-1"></i>
+                                                            {{ task.assigned_user.full_name }}
+                                                        </span>
+                                                    {% endif %}
+                                                    {% if task.status == 'done' %}
+                                                        <span class="text-success">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            Completed: {{ task.updated_at.strftime('%b %d, %Y') }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No Tasks Available</h5>
+                                <p class="text-muted">Development tasks will appear here once the project begins.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Project Information -->
+    <div class="row mt-4">
+        <div class="col">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="mb-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Project Information
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Project Type:</strong><br>
+                            <span class="text-muted">{{ project.project_type.title() }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Status:</strong><br>
+                            <span class="badge bg-{% if project.status == 'active' %}success{% elif project.status == 'completed' %}primary{% else %}secondary{% endif %}">
+                                {{ project.status.title() }}
+                            </span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Created:</strong><br>
+                            <span class="text-muted">{{ project.created_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Last Updated:</strong><br>
+                            <span class="text-muted">{{ project.updated_at.strftime('%B %d, %Y') }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add subtle animations to improve user experience
+    const items = document.querySelectorAll('.finding-item, .task-item');
+    items.forEach((item, index) => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        
+        setTimeout(() => {
+            item.style.transition = 'all 0.5s ease-out';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+        }, index * 100);
+    });
+});
+</script>
+{% endblock %}

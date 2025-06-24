@@ -1,0 +1,217 @@
+<!-- Global modals that can be used across the application -->
+
+<!-- Confirmation Modal -->
+<div class="modal fade" id="confirmationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>
+                    Confirm Action
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmationMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmationConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center py-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <div id="loadingMessage">Processing...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Profile Modal -->
+<div class="modal fade" id="userProfileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user me-2"></i>
+                    User Profile
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="profileForm">
+                    <div class="text-center mb-4">
+                        <div class="avatar-lg mx-auto">
+                            <div class="avatar-initial rounded-circle bg-primary text-white">
+                                {{ session.user_name.split()[0][0] if session.user_name else 'U' }}{{ session.user_name.split()[-1][0] if session.user_name and session.user_name.split()|length > 1 else '' }}
+                            </div>
+                        </div>
+                        <h6 class="mt-2 mb-0">{{ session.user_name or 'User' }}</h6>
+                        <small class="text-muted">{{ session.user_role.replace('_', ' ').title() if session.user_role else 'User' }}</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="profileFirstName" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="profileFirstName" readonly>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="profileLastName" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="profileLastName" readonly>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profileEmail" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="profileEmail" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profileUsername" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="profileUsername" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profileRole" class="form-label">Role</label>
+                        <input type="text" class="form-control" id="profileRole" readonly>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" disabled>
+                    <i class="fas fa-edit me-2"></i>Edit Profile
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal fade" id="settingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-cog me-2"></i>
+                    User Settings
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-bell me-2"></i>
+                        Notifications
+                    </h6>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="emailNotifications" checked>
+                        <label class="form-check-label" for="emailNotifications">
+                            Email Notifications
+                        </label>
+                    </div>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="browserNotifications">
+                        <label class="form-check-label" for="browserNotifications">
+                            Browser Notifications
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-palette me-2"></i>
+                        Appearance
+                    </h6>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="theme" id="lightTheme" value="light" checked>
+                        <label class="form-check-label" for="lightTheme">
+                            Light Theme
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="theme" id="darkTheme" value="dark" disabled>
+                        <label class="form-check-label" for="darkTheme">
+                            Dark Theme <small class="text-muted">(Coming Soon)</small>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h6 class="mb-3">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Security
+                    </h6>
+                    <button type="button" class="btn btn-outline-warning btn-sm mb-2" disabled>
+                        <i class="fas fa-key me-2"></i>
+                        Change Password
+                    </button>
+                    <br>
+                    <button type="button" class="btn btn-outline-info btn-sm" disabled>
+                        <i class="fas fa-mobile-alt me-2"></i>
+                        Two-Factor Authentication
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" disabled>
+                    <i class="fas fa-save me-2"></i>Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-lg {
+    width: 80px;
+    height: 80px;
+}
+
+.avatar-lg .avatar-initial {
+    font-size: 1.5rem;
+}
+</style>
+
+<script>
+// Global modal functions
+function showConfirmation(message, onConfirm) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    document.getElementById('confirmationMessage').textContent = message;
+    
+    const confirmBtn = document.getElementById('confirmationConfirm');
+    confirmBtn.onclick = function() {
+        modal.hide();
+        if (onConfirm) onConfirm();
+    };
+    
+    modal.show();
+}
+
+function showLoading(message = 'Processing...') {
+    document.getElementById('loadingMessage').textContent = message;
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    return modal;
+}
+
+function hideLoading() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (modal) modal.hide();
+}
+
+// Export to global scope
+window.showConfirmation = showConfirmation;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+</script>

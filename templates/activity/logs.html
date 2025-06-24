@@ -1,0 +1,357 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="text-gradient mb-2">
+                <i class="fas fa-history me-3"></i>
+                Activity Logs
+            </h1>
+            <p class="text-muted">Monitor user activities and system events</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label for="action" class="form-label">Filter by Action</label>
+                            <select class="form-select" id="action" name="action">
+                                <option value="">All Actions</option>
+                                {% for action in unique_actions %}
+                                    <option value="{{ action }}" {% if action_filter == action %}selected{% endif %}>
+                                        {{ action.replace('_', ' ').title() }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="user" class="form-label">Filter by User</label>
+                            <input type="text" class="form-control" id="user" name="user" 
+                                   value="{{ user_filter }}" placeholder="Username or name">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="date" class="form-label">Filter by Date</label>
+                            <input type="date" class="form-control" id="date" name="date" 
+                                   value="{{ date_filter }}">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-outline-primary me-2">
+                                <i class="fas fa-search me-2"></i>Filter
+                            </button>
+                            <a href="{{ url_for('activity.logs') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Stats -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Daily Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="dailyActivityChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-pie me-2"></i>
+                        Top Actions
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="topActionsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-users me-2"></i>
+                        Most Active Users
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="activeUsersChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Table -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Activity Log ({{ activities.total }} total)</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if activities.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Time</th>
+                                        <th>User</th>
+                                        <th>Action</th>
+                                        <th>Description</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities.items %}
+                                        <tr>
+                                            <td>
+                                                <div class="text-nowrap">
+                                                    <div class="fw-medium">{{ activity.created_at.strftime('%b %d, %Y') }}</div>
+                                                    <div class="text-muted small">{{ activity.created_at.strftime('%I:%M %p') }}</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-sm me-2">
+                                                        <div class="avatar-initial rounded-circle bg-primary text-white">
+                                                            {{ activity.user.first_name[0] }}{{ activity.user.last_name[0] }}
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ activity.user.full_name }}</div>
+                                                        <div class="text-muted small">{{ activity.user.role.replace('_', ' ').title() }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{% if activity.action == 'login' %}success{% elif activity.action == 'logout' %}secondary{% elif activity.action.startswith('create') %}primary{% elif activity.action.startswith('edit') %}warning{% elif activity.action.startswith('delete') %}danger{% else %}info{% endif %}">
+                                                    <i class="fas fa-{% if activity.action == 'login' %}sign-in-alt{% elif activity.action == 'logout' %}sign-out-alt{% elif activity.action.startswith('create') %}plus{% elif activity.action.startswith('edit') %}edit{% elif activity.action.startswith('delete') %}trash{% elif activity.action == 'move_task' %}arrows-alt{% else %}circle{% endif %} me-1"></i>
+                                                    {{ activity.action.replace('_', ' ').title() }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="text-break">{{ activity.description }}</div>
+                                            </td>
+                                            <td>
+                                                <div class="text-muted small">
+                                                    {% if activity.entity_type %}
+                                                        <div>
+                                                            <i class="fas fa-tag me-1"></i>
+                                                            {{ activity.entity_type.title() }}
+                                                            {% if activity.entity_id %}
+                                                                #{{ activity.entity_id }}
+                                                            {% endif %}
+                                                        </div>
+                                                    {% endif %}
+                                                    {% if activity.ip_address %}
+                                                        <div>
+                                                            <i class="fas fa-network-wired me-1"></i>
+                                                            {{ activity.ip_address }}
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if activities.pages > 1 %}
+                            <div class="card-footer">
+                                <nav aria-label="Activity pagination">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        <li class="page-item {% if not activities.has_prev %}disabled{% endif %}">
+                                            <a class="page-link" href="{{ url_for('activity.logs', page=activities.prev_num, action=action_filter, user=user_filter, date=date_filter) if activities.has_prev }}">
+                                                Previous
+                                            </a>
+                                        </li>
+                                        
+                                        {% for page_num in activities.iter_pages() %}
+                                            {% if page_num %}
+                                                {% if page_num != activities.page %}
+                                                    <li class="page-item">
+                                                        <a class="page-link" href="{{ url_for('activity.logs', page=page_num, action=action_filter, user=user_filter, date=date_filter) }}">
+                                                            {{ page_num }}
+                                                        </a>
+                                                    </li>
+                                                {% else %}
+                                                    <li class="page-item active">
+                                                        <span class="page-link">{{ page_num }}</span>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                <li class="page-item disabled">
+                                                    <span class="page-link">...</span>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        <li class="page-item {% if not activities.has_next %}disabled{% endif %}">
+                                            <a class="page-link" href="{{ url_for('activity.logs', page=activities.next_num, action=action_filter, user=user_filter, date=date_filter) if activities.has_next }}">
+                                                Next
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Activity Found</h5>
+                            <p class="text-muted">No activities match your current filters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load activity statistics
+    fetch('/activity/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            createDailyActivityChart(data.daily_stats);
+            createTopActionsChart(data.action_stats);
+            createActiveUsersChart(data.user_stats);
+        })
+        .catch(error => {
+            console.error('Error loading activity stats:', error);
+        });
+});
+
+function createDailyActivityChart(data) {
+    const ctx = document.getElementById('dailyActivityChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(item => new Date(item.date).toLocaleDateString()),
+            datasets: [{
+                label: 'Daily Activities',
+                data: data.map(item => item.count),
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createTopActionsChart(data) {
+    const ctx = document.getElementById('topActionsChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: data.map(item => item.action.replace('_', ' ')),
+            datasets: [{
+                data: data.map(item => item.count),
+                backgroundColor: [
+                    '#2563eb', '#059669', '#d97706', '#dc2626', '#7c3aed',
+                    '#0284c7', '#ea580c', '#be123c', '#4338ca', '#0d9488'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        padding: 10,
+                        usePointStyle: true,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createActiveUsersChart(data) {
+    const ctx = document.getElementById('activeUsersChart').getContext('2d');
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.map(item => item.name.split(' ')[0]), // First name only
+            datasets: [{
+                label: 'Activities',
+                data: data.map(item => item.count),
+                backgroundColor: '#059669',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+{% endblock %}
