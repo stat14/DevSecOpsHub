@@ -14,7 +14,7 @@ import json
 analytics_bp = Blueprint('analytics', __name__)
 
 @analytics_bp.route('/dashboard')
-@role_required(['admin', 'super_admin'])
+@require_role(['admin', 'super_admin'])
 def analytics_dashboard():
     """Main analytics dashboard"""
     return render_template('analytics/dashboard.html')
